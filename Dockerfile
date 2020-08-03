@@ -23,7 +23,7 @@ ENV HOME=/root
 WORKDIR $HOME
 
 # 复制
-COPY config/run /home/root/
+COPY config/scripts /home/root/
 COPY --from=builder /home/root/lotus/bin /usr/local/lotus/
 ENV PATH $PATH:/usr/local/lotus/bin
 

@@ -1,0 +1,12 @@
+- name: install utils
+  shell: apt install -y apache2-utils
+- name: copy lotus
+  copy: src=/usr/local/bin/lotus dest=/usr/local/bin/lotus
+- name: copy lotus-miner
+  copy: src=/usr/local/bin/lotus-storage-miner dest=/usr/local/bin/lotus-storage-miner
+- name: copy lotus-worker
+  copy: src=/usr/local/bin/lotus-seal-worker dest=/usr/local/bin/lotus-seal-worker
+- name: copy run.sh
+  copy: src=../../../../scripts/run.sh dest=/root
+- name: chmod run.sh
+  shell: chmod +x /root/run.sh
