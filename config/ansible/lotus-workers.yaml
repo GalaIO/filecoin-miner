@@ -12,5 +12,7 @@
       copy: src=/usr/local/bin/lotus-storage-miner dest=/usr/local/bin/lotus-storage-miner
     - name: copy lotus-worker
       copy: src=/usr/local/bin/lotus-seal-worker dest=/usr/local/bin/lotus-seal-worker
+    - name: copy run.sh
+      copy: src=../run/run.sh dest=/root
     - name: run lotus worker
-      shell: nohup lotus-seal-worker run --address={{ ansible_default_ipv4.address }}:2346 | rotatelogs lotus-miner-worker_%Y%m%d%H%M.log 100M &
+      shell: /root/run.sh worker_run
