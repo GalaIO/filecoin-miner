@@ -1,0 +1,16 @@
+- hosts: workers
+  remote_user: root
+  vars:
+    http_port=80
+
+  tasks:
+    - name: install utils
+      shell: apt install -y apache2-utils
+    - name: copy lotus
+      copy: src=/usr/local/bin/lotus dest=/usr/local/bin/lotus
+    - name: copy lotus-miner
+      copy: src=/usr/local/bin/lotus-storage-miner dest=/usr/local/bin/lotus-storage-miner
+    - name: copy lotus-worker
+      copy: src=/usr/local/bin/lotus-seal-worker dest=/usr/local/bin/lotus-seal-worker
+    - name: run lotus worker
+      shell: nohup lotus-seal-worker run --address={{ ansible_default_ipv4.address }}:2346 | rotatelogs lotus-miner-worker_%Y%m%d%H%M.log 100M &

@@ -1,0 +1,120 @@
+# yaml 配置
+version: '3'
+services:
+  lotus-dminer:
+    image: "gin-template:latest"
+    container_name: web
+    depends_on:
+      - redis
+      - mysql
+      - kafka
+      - kafka-manager
+      - elasticsearch
+    ports:
+      - "80:80"
+      - "443:443"
+      - "10080:10080"
+    volumes:
+      - /home/admin/gin-template:/home/admin/gin-template:rw
+      - /home/admin/nginx:/var/log/nginx:rw
+    restart: always
+
+  lotus-worker:
+    image: "redis:alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /home/admin/redis/data:/data/:rw
+    restart: always
+
+  mysql:
+    image: "mysql:5.7.29"
+    container_name: mysql
+    ports:
+      - "13306:3306"
+    volumes:
+      - /home/admin/mysql/data:/var/lib/mysql:rw
+      - /home/admin/mysql/logs:/var/log/mysql:rw
+    #      - /home/admin/mysql/v5.7/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf:rw
+    environment:
+      MYSQL_ROOT_PASSWORD: WDL129Xzz
+      MYSQL_DATABASE: app_blog
+      MYSQL_USER: test
+      MYSQL_PASSWORD: Xq54tGxtZt4MJha
+    restart: always
+    command: "--character-set-server=utf8"
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    restart: always
+    volumes:
+      - /home/admin/zookeeper/data:/data
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "1099:1099"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: "127.0.0.1"
+      CUSTOM_JMX_PORT: "1099"
+      KAFKA_MESSAGE_MAX_BYTES: 2000000
+      KAFKA_CREATE_TOPICS: "Topic1:1:1,Topic2:1:1:compact"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /home/admin/kafka/:/kafka
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager
+    container_name: kafka-manager
+    restart: always
+    depends_on:
+      - zookeeper
+      - kafka
+    ports:
+      - 9000:9000
+    volumes:
+      - /home/admin/kafka-manager/:/user/kafka-manager
+    environment:
+      KAFKA_MANAGER_AUTH_ENABLED: "true"
+      KAFKA_MANAGER_USERNAME: "admin"
+      KAFKA_MANAGER_PASSWORD: "asa2#qw"
+      ZK_HOSTS: zookeeper:2181
+
+  elasticsearch:
+    image: elasticsearch:7.6.2
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - http.cors.enabled=true
+      - http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization
+      - http.cors.allow-credentials=true
+      - http.cors.allow-origin=http://localhost:1358,http://127.0.0.1:1358
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /home/admin/elasticsearch/data:/usr/share/elasticsearch/data
+      - /home/admin/elasticsearch/plugins:/usr/share/elasticsearch/plugins
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+  elasticwebui:
+    image: appbaseio/dejavu
+    container_name: elasticwebui
+    restart: always
+    depends_on:
+      - elasticsearch
+    ports:
+      - 1358:1358

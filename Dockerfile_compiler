@@ -1,0 +1,24 @@
+FROM golang:1.14 AS compiler
+
+# 基础信息
+ENV APP_NAME=lotus
+ENV HOME=/root
+
+WORKDIR $HOME
+
+# 设置rust下载服务器
+ENV RUSTUP_DIST_SERVER=https://mirrors.ustc.edu.cn/rust-static
+ENV RUSTUP_UPDATE_ROOT=https://mirrors.ustc.edu.cn/rust-static/rustup
+# 设置go代理库
+ENV GOPROXY=https://goproxy.cn,direct
+
+# 安装rustup
+RUN curl https://sh.rustup.rs -sSf > rustup.sh && \
+chmod +x rustup.sh && \
+./rustup.sh -y
+ENV PATH=$PATH:$HOME/.cargo/bin
+COPY config/rust/config $HOME/.cargo/config
+
+# 设置编译环境
+RUN apt update && \
+apt -y install mesa-opencl-icd ocl-icd-opencl-dev gcc git bzr jq pkg-config curl
