@@ -37,22 +37,37 @@ ROTATELOG_LIMIT=100M
 
 function daemon() {
   echo "run lotus daemon"
-  nohup lotus daemon | rotatelogs lotus-daemon_%Y%m%d%H%M.log $ROTATELOG_LIMIT &
+  nohup lotus daemon | rotatelogs lotus-daemon_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > daemon_run.pid
 }
 
 function miner_init() {
   echo "init lotus miner"
-  nohup lotus-storage-miner init --actor=$FILECOIN_MINER_ACTOR --owner=$FILECOIN_MINER_ADDRESS | rotatelogs lotus-miner-init_%Y%m%d%H%M.log $ROTATELOG_LIMIT &
+  nohup lotus-storage-miner init --actor=$FILECOIN_MINER_ACTOR --owner=$FILECOIN_MINER_ADDRESS | rotatelogs lotus-miner-init_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > miner_init.pid
 }
 
 function miner_run() {
   echo "run lotus miner"
-  nohup lotus-storage-miner run | rotatelogs lotus-miner-run_%Y%m%d%H%M.log $ROTATELOG_LIMIT &
+  nohup lotus-storage-miner run | rotatelogs lotus-miner-run_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > miner_run.pid
 }
 
 function worker_run() {
   echo "run lotus worker"
-  nohup lotus-seal-worker run --address="$LOCAL_IP":2346 | rotatelogs lotus-miner-worker_%Y%m%d%H%M.log $ROTATELOG_LIMIT &
+  nohup lotus-seal-worker run --address="$LOCAL_IP":2346 | rotatelogs lotus-miner-worker_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > worker_run.pid
+}
+
+function stop_all() {
+  if [ -f "daemon_run.pid" ]; then
+    echo "stop lotus daemon"
+    kill 9 $(cat daemon_run.pid)
+  fi
+  if [ -f "miner_run.pid" ]; then
+    echo "stop lotus miner"
+    kill 9 $(cat miner_run.pid)
+  fi
+  if [ -f "worker_run.pid" ]; then
+    echo "stop lotus worker"
+    kill 9 $(cat worker_run.pid)
+  fi
 }
 
 case $1 in
@@ -68,6 +83,9 @@ case $1 in
     'worker_run')
         worker_run
         ;;
+    'stop_all')
+        stop_all
+        ;;
     *)
         # shellcheck disable=SC2016
         echo 'Get invalid option, please input(as to $1):'
@@ -75,5 +93,6 @@ case $1 in
         echo -e '\t"miner_init"  -> init lotus miner'
         echo -e '\t"miner_run"  -> run lotus miner'
         echo -e '\t"worker_run"  -> run lotus worker'
+        echo -e '\t"stop_all"  -> stop lotus daemon miner worker'
   exit 1
 esac
