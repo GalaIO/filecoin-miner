@@ -33,26 +33,30 @@ export RUST_LOG=Trace
 ulimit -n 655350
 
 LOCAL_IP=$(ip route get 1.2.3.4 | awk '{print $7}')
-ROTATELOG_LIMIT=100M
+TIME_STR=$(date "+%Y%m%d%H%M%S")
 
 function daemon() {
   echo "run lotus daemon"
-  nohup lotus daemon | rotatelogs lotus-daemon_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > daemon_run.pid
+  nohup lotus daemon >lotus-daemon_$TIME_STR.log 2>&1 &
+  echo $! > daemon_run.pid
 }
 
 function miner_init() {
   echo "init lotus miner"
-  nohup lotus-storage-miner init --actor=$FILECOIN_MINER_ACTOR --owner=$FILECOIN_MINER_ADDRESS | rotatelogs lotus-miner-init_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > miner_init.pid
+  nohup lotus-storage-miner init --actor=$FILECOIN_MINER_ACTOR --owner=$FILECOIN_MINER_ADDRESS >lotus-miner-init_$TIME_STR.log 2>&1 &
+  echo $! > miner_init.pid
 }
 
 function miner_run() {
   echo "run lotus miner"
-  nohup lotus-storage-miner run | rotatelogs lotus-miner-run_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > miner_run.pid
+  nohup lotus-storage-miner run >lotus-miner-run_$TIME_STR.log 2>&1 &
+  echo $! > miner_run.pid
 }
 
 function worker_run() {
   echo "run lotus worker"
-  nohup lotus-seal-worker run --address="$LOCAL_IP":2346 | rotatelogs lotus-miner-worker_%Y%m%d%H%M.log $ROTATELOG_LIMIT 480 & echo $! > worker_run.pid
+  nohup lotus-seal-worker run --address="$LOCAL_IP":2346 >lotus-miner-worker_$TIME_STR.log 2>&1 &
+  echo $! > worker_run.pid
 }
 
 function stop_all() {
